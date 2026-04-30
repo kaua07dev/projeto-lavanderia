@@ -1,12 +1,14 @@
+painel.php
+
 <?php
 session_start();
-date_default_timezone_set('America/Sao_Paulo');
 
 if (!isset($_SESSION['logado'])) {
     header("Location: index.php");
     exit;
 }
 
+// cria lista de pedidos se não existir
 if (!isset($_SESSION['pedidos'])) {
     $_SESSION['pedidos'] = [];
 }
@@ -20,16 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['peso'])) {
     $_SESSION['pedidos'][] = [
         'peso' => $peso,
         'preco' => $preco,
-        'total' => $total,
-        'data' => date("Y-m-d H:i:s"),
-        'status' => 'Lavando'
+        'total' => $total
     ];
-}
-
-// calcular total geral
-$totalGeral = 0;
-foreach ($_SESSION['pedidos'] as $p) {
-    $totalGeral += $p['total'];
 }
 ?>
 
@@ -37,76 +31,36 @@ foreach ($_SESSION['pedidos'] as $p) {
 <html>
 <head>
     <title>Painel</title>
+    <link rel="stylesheet" href="style.css">
 
     <style>
-        body {
-            font-family: Arial;
-            background: linear-gradient(135deg, #4a6cf7, #6f8cff);
-            margin: 0;
-        }
-
-        header {
-            background: #2f4cd8;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
         .container {
             display: flex;
             justify-content: space-around;
-            margin: 20px;
+            margin-top: 20px;
         }
 
         .coluna {
-            width: 45%;
+            width: 40%;
             background: white;
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
-        }
-
-        h2 {
-            color: #2f4cd8;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-        }
-
-        button {
-            background: #4a6cf7;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #2f4cd8;
+            border-radius: 10px;
         }
 
         .pedido {
-            background: #f1f5ff;
+            background: #eee;
             padding: 10px;
             margin: 10px 0;
-            border-radius: 10px;
+            border-radius: 8px;
         }
 
         .excluir {
             background: red;
-        }
-
-        .status {
-            font-weight: bold;
-        }
-
-        .total {
-            margin-top: 15px;
-            font-size: 18px;
-            color: green;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-top: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -114,12 +68,12 @@ foreach ($_SESSION['pedidos'] as $p) {
 <body>
 
 <header>
-    <h1>🧺 Lavanderia Express</h1>
+    <h1>Lavanderia Express</h1>
 </header>
 
 <div class="container">
 
-    <!-- 👤 USUÁRIO -->
+    <!-- 🟦 COLUNA 1 -->
     <div class="coluna">
         <h2>👤 Usuário</h2>
 
@@ -128,19 +82,19 @@ foreach ($_SESSION['pedidos'] as $p) {
 
         <br>
 
-        <a href="editar.php"><button>✏️ Editar</button></a>
-        <a href="logout.php"><button>🚪 Sair</button></a>
+        <a href="editar.php"><button>Editar Dados</button></a><br><br>
+        <a href="logout.php"><button>Sair</button></a>
     </div>
 
-    <!-- 🧺 PEDIDOS -->
+    <!-- 🟩 COLUNA 2 -->
     <div class="coluna">
-        <h2> Serviços</h2>
+        <h2>🧺 Serviços da Lavanderia</h2>
 
-        <h3>📋 Preços</h3>
+        <h3>📋 Tabela de Preços</h3>
         <ul>
-            <li>Roupa Comum: R$10/kg</li>
-            <li>Roupa Pesada: R$15/kg</li>
-            <li>Roupa Delicada: R$12/kg</li>
+            <li>👕 Comum: R$10/kg</li>
+            <li>🧥 Pesada: R$15/kg</li>
+            <li>👗 Delicada: R$12/kg</li>
         </ul>
 
         <hr>
@@ -151,27 +105,17 @@ foreach ($_SESSION['pedidos'] as $p) {
             <input type="number" step="0.1" name="peso" placeholder="Peso (kg)" required>
 
             <select name="tipo">
-                <option value="10">Camisa</option>
-                <option value="15">Terno</option>
-                <option value="12">Cobertor</option>
-                <option value="8">Calça jeans</option>
-                
+                <option value="10">Comum</option>
+                <option value="15">Pesada</option>
+                <option value="12">Delicada</option>
             </select>
 
-            <select name="pagamento" required>
-    <option value="">Selecione</option>
-    <option value="Pix">Pix</option>
-    <option value="Débito">Cartão de Débito</option>
-    <option value="Crédito">Cartão de Crédito</option>
-    <option value="Dinheiro">Dinheiro</option>
-</select>
-
-            <button type="submit">Adicionar Pedido</button>
+            <button type="submit">Adicionar</button>
         </form>
 
         <hr>
 
-        <h3>📦 Pedidos</h3>
+        <h3>📦 Meus Pedidos</h3>
 
         <?php
         if (empty($_SESSION['pedidos'])) {
@@ -179,23 +123,17 @@ foreach ($_SESSION['pedidos'] as $p) {
         }
 
         foreach ($_SESSION['pedidos'] as $index => $pedido) {
-
             echo "<div class='pedido'>";
-            echo "🧺 {$pedido['peso']} kg<br>";
-            echo "💰 R$ " . number_format($pedido['total'], 2, ',', '.') . "<br>";
-            echo "📅 " . date("d/m/Y H:i", strtotime($pedido['data'])) . "<br>";
-            echo "<span class='status'>Status: {$pedido['status']}</span><br>";
+            echo "Peso: {$pedido['peso']} kg<br>";
+            echo "Total: R$ " . number_format($pedido['total'], 2, ',', '.') . "<br>";
 
             echo "<a href='excluir_pedido.php?id=$index'>
-                    <button class='excluir'> Excluir</button>
+                    <button class='excluir'>Excluir</button>
                   </a>";
 
             echo "</div>";
         }
-
-        echo "<div class='total'>💵 Total geral: R$ " . number_format($totalGeral, 2, ',', '.') . "</div>";
         ?>
-
     </div>
 
 </div>
