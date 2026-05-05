@@ -2,14 +2,35 @@
 
 <?php
 session_start();
+include 'conexao.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    $nome = $_POST['nome'];
+    $email = $_POST['email'];
+    $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
+
+    // Verificar se o email já existe
+    $stmt = $conn->prepare("SELECT id FROM clientes WHERE email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        die("Email já cadastrado!");
+    }
+
+    // Inserir novo usuário
+    $stmt = $conn->prepare("INSERT INTO clientes (nome, email, senha) VALUES (?, ?, ?)");
+    $stmt->execute([$nome, $email, $senha]);
+
+    // Obter o ID do usuário recém-criado
+    $id = $conn->lastInsertId();
+
     $_SESSION['usuario'] = [
-        'nome' => $_POST['nome'],
-        'email' => $_POST['email'],
-        'senha' => $_POST['senha']
+        'id' => $id,
+        'nome' => $nome,
+        'email' => $email
     ];
+
+    $_SESSION['logado'] = true;
 }
 ?>
 
@@ -75,8 +96,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <p><b>Nome:</b> <?php echo $_SESSION['usuario']['nome']; ?></p>
     <p><b>Email:</b> <?php echo $_SESSION['usuario']['email']; ?></p>
 
-    <a href="index.php">
-        <button>Ir para login</button>
+    <a href="painel.php">
+        <button>Ir para o painel</button>
     </a>
 </div>
 

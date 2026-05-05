@@ -3,8 +3,9 @@
 <?php
 include 'conexao.php';
 $id = $_GET['id'];
-$res = $conn->query("SELECT * FROM clientes WHERE id=$id");
-$row = $res->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM clientes WHERE id=?");
+$stmt->execute([$id]);
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
 <form action="atualizar.php" method="POST">

@@ -1,20 +1,38 @@
-
-
 <?php
 session_start();
+include 'conexao.php';
 
-$email = $_POST['email'];
-$senha = $_POST['senha'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-if (
-    isset($_SESSION['usuario']) &&
-    $email == $_SESSION['usuario']['email'] &&
-    $senha == $_SESSION['usuario']['senha']
-) {
-    $_SESSION['logado'] = true;
-    header("Location: painel.php");
-} else {
-    echo "<h2>❌ Login inválido!</h2>";
-    echo "<a href='index.php'>Voltar</a>";
+    $email = $_POST['email'];
+    $senha = $_POST['senha'];
+
+    $stmt = $conn->prepare("SELECT * FROM clientes WHERE email = ?");
+    $stmt->execute([$email]);
+
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($usuario) {
+
+        if (password_verify($senha, $usuario['senha'])) {
+
+            $_SESSION['usuario'] = [
+                'id' => $usuario['id'], // 🔥 ESSENCIAL
+                'nome' => $usuario['nome'],
+                'email' => $usuario['email']
+            ];
+
+            $_SESSION['logado'] = true;
+
+            header("Location: painel.php");
+            exit;
+
+        } else {
+            echo "Senha incorreta!";
+        }
+
+    } else {
+        echo "Usuário não encontrado!";
+    }
 }
 ?>
